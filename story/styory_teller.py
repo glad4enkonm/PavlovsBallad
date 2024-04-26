@@ -5,8 +5,7 @@ from langchain.tools import BaseTool
 # Сочинитель истории
 class StoryTellerTool(BaseTool):
     name = "create_story"
-    description = """Создаёт популярные и увлекательные детски истории.
-    Возвращает историю состоящую из блоков.
+    description = """Создаёт популярные и увлекательные детски истории.    
 
     Примеры:
     Нужно создать историю"""

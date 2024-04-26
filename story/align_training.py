@@ -154,4 +154,5 @@ class AlignTrainingTool(BaseTool):
         strings_to_save.append(self.common["story_parts"][-1])
         origin_id = save_list_to_files(strings_to_save)
         self.common["file_id_to_start_chain"] = origin_id
+        print(f"origin_id = {origin_id}")
         return "Упражнения подготовлены."

@@ -43,13 +43,13 @@ def add_meta(base, meta):
 
 
 def process_string_to_json(input_string):    
-    pattern = r'(.*?)(\[.*?\])?\[(part[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\]'
+    pattern = r'(.*?)(\[.*?\])?\[(part[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|partLast)\]'
     match = re.search(pattern, input_string)
 
     if match:
         meta = match.group(2) if match.group(1) else ""
         value = match.group(1)
-        uuid = match.group(3)[5:-1]  # Remove the '[part' and ']' from the UUID
+        uuid = match.group(3)[4:]  # Remove the '[part' and ']' from the UUID
 
         result = {
             "value": value,
@@ -64,7 +64,7 @@ def process_string_to_json(input_string):
 
 def save_to_file(file_name, value):
   value_to_save = process_string_to_json(value)
-  with open(file_name, 'w') as file:
+  with open(f"{file_name}.json", 'w') as file:
     file.write(value_to_save)
 
 def id_next(actual_next_id = None):
@@ -73,8 +73,10 @@ def id_next(actual_next_id = None):
 def save_list_to_files(list_to_save):  
   this_id, next_id = id_next()
   origin_id = this_id
-  for s in list_to_save:
-    print(s, f"[part{next_id}]")
-    save_to_file(f"data/{this_id}", s + f"[part{next_id}]")
+  last_this_id = this_id
+  for s in list_to_save:    
+    save_to_file(f"data/{this_id}", s + f"[part{next_id}]" if s != list_to_save[-1] else s + f"[partLast]")
+    last_this_id = this_id
     this_id, next_id = id_next(next_id)
+  print(f"last_this_id = {last_this_id}")
   return origin_id
