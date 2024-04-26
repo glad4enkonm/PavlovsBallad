@@ -3,7 +3,7 @@ import uuid
 import json
 import os
 
-PATH_TO_SAVE = os.environ.get('PATH_TO_SAVE', "./")
+PATH_TO_SAVE = os.environ.get('PATH_TO_SAVE')
 
 def split_text_by_block(text):
   pattern = r"Блок\s+\d+."  

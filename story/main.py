@@ -11,7 +11,9 @@ from align_training import AlignTrainingTool
 from story_critic import StoryCriticTool
 from styory_teller import StoryTellerTool
 
-credentials=""
+import os
+
+credentials=os.environ.get('CREADENTIALS')
 scope='GIGACHAT_API_CORP'
 model="GigaChat-Pro-preview"
 
@@ -40,7 +42,7 @@ def run(age = "14 лет", interest = "плавание и компьютерн�
         try:
             llm = GigaChat(
                 verify_ssl_certs=False,
-                timeout=300,
+                timeout=600,
                 model=model,
                 credentials=credentials,
                 scope=scope

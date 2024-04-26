@@ -4,5 +4,8 @@ services:
     build: ./story
     env_file:
       - .env
+    restart: unless-stopped
     ports:
       - 8000:80
+    volumes:
+      - /home/no/data:/data:rw
