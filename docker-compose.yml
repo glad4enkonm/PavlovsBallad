@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  back:
+    build: ./story
+    env_file:
+      - .env
+    ports:
+      - 8000:80

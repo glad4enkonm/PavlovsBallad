@@ -1,6 +1,9 @@
 import re
 import uuid
 import json
+import os
+
+PATH_TO_SAVE = os.environ.get('PATH_TO_SAVE', "./")
 
 def split_text_by_block(text):
   pattern = r"Блок\s+\d+."  
@@ -75,7 +78,7 @@ def save_list_to_files(list_to_save):
   origin_id = this_id
   last_this_id = this_id
   for s in list_to_save:    
-    save_to_file(f"data/{this_id}", s + f"[part{next_id}]" if s != list_to_save[-1] else s + f"[partLast]")
+    save_to_file(f"{PATH_TO_SAVE}{this_id}", s + f"[part{next_id}]" if s != list_to_save[-1] else s + f"[partLast]")
     last_this_id = this_id
     this_id, next_id = id_next(next_id)
   print(f"last_this_id = {last_this_id}")

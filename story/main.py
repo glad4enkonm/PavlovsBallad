@@ -34,34 +34,37 @@ interest = ""
 story_parts = []
 
 
-def run():
+def run(age = "14 лет", interest = "плавание и компьютерные игры"):
     
-    llm = GigaChat(
-        verify_ssl_certs=False,
-        timeout=300,
-        model=model,
-        credentials=credentials,
-        scope=scope
-    )
-
-    age = "14 лет"
-    interest = "плавание и компьютерные игры"
+    for _ in range(3):
+        try:
+            llm = GigaChat(
+                verify_ssl_certs=False,
+                timeout=300,
+                model=model,
+                credentials=credentials,
+                scope=scope
+            )
     
-    chat_history = [SystemMessage(content=system)]
-    common = {"age":age, "interest": interest, "llm": llm, "story_parts" : [], "file_id_to_start_chain": ''}
-    tools = [StoryTellerTool(common), StoryCriticTool(common), AlignTrainingTool(common)]
-    agent = create_gigachat_functions_agent(llm, tools)
+            chat_history = [SystemMessage(content=system)]
+            common = {"age":age, "interest": interest, "llm": llm, "story_parts" : [], "file_id_to_start_chain": ''}
+            tools = [StoryTellerTool(common), StoryCriticTool(common), AlignTrainingTool(common)]
+            agent = create_gigachat_functions_agent(llm, tools)
 
-    # AgentExecutor создает среду, в которой будет работать агент
-    agent_executor = AgentExecutor(
-        agent=agent, tools=tools, verbose=False, return_intermediate_steps=True
-    )
+            # AgentExecutor создает среду, в которой будет работать агент
+            agent_executor = AgentExecutor(
+                agent=agent, tools=tools, verbose=False, return_intermediate_steps=True
+            )
 
-    user_input = "Соствь историю"
-    result = agent_executor.invoke({"chat_history": chat_history,"input": user_input,})
-    user_input = ""
-    print( f"Bot: {result['output']}")
-    #'9fd5bfe1-0261-4900-a53c-80f73b5cf7e0'
+            user_input = "Соствь историю"
+            result = agent_executor.invoke({"chat_history": chat_history,"input": user_input})    
+            print( f"Bot: {result['output']}")
+            if common["file_id_to_start_chain"] == "":
+                raise Exception("Не получено значение диалога")
+            return common["file_id_to_start_chain"]
+        except Exception as e:
+            print("Ошибка", e)
+    return ""
 
 if __name__ == "__main__":
     run()
