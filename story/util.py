@@ -1,5 +1,6 @@
 import re
 import uuid
+import json
 
 def split_text_by_block(text):
   pattern = r"Блок\s+\d+."  
@@ -16,7 +17,17 @@ def extract_number(string):
     return None
 
 
-def split_string_by_numbered_dots(text):
+def remove_before_first_numbered_dot(text):
+    pattern = r"1\."
+    match = re.search(pattern, text)
+    if match:
+        start_index = match.start()
+        return text[start_index:]
+    else:
+        return text
+
+def split_string_by_numbered_dots(text):  
+  text = remove_before_first_numbered_dot(text)
   pattern = r"\d+\."
   sublists = re.split(pattern, text)
   sublists = [sublist.strip() for sublist in sublists if sublist.strip()]
@@ -31,16 +42,39 @@ def add_meta(base, meta):
   return base
 
 
+def process_string_to_json(input_string):    
+    pattern = r'(.*?)(\[.*?\])?\[(part[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\]'
+    match = re.search(pattern, input_string)
+
+    if match:
+        meta = match.group(2) if match.group(1) else ""
+        value = match.group(1)
+        uuid = match.group(3)[5:-1]  # Remove the '[part' and ']' from the UUID
+
+        result = {
+            "value": value,
+            "uuid": uuid,
+            "meta": meta,
+            "error": ""
+        }
+
+        return json.dumps(result)
+    else:
+        return json.dumps({"error":"invalid"})
+
 def save_to_file(file_name, value):
+  value_to_save = process_string_to_json(value)
   with open(file_name, 'w') as file:
-    file.write(value)
+    file.write(value_to_save)
 
 def id_next(actual_next_id = None):
   return (str(uuid.uuid4()), str(uuid.uuid4())) if actual_next_id is None else (actual_next_id, str(uuid.uuid4()))
 
 def save_list_to_files(list_to_save):  
   this_id, next_id = id_next()
+  origin_id = this_id
   for s in list_to_save:
     print(s, f"[part{next_id}]")
     save_to_file(f"data/{this_id}", s + f"[part{next_id}]")
     this_id, next_id = id_next(next_id)
+  return origin_id

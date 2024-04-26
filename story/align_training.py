@@ -104,8 +104,7 @@ align_messages = [SystemMessage(content="""
 Твоя цель состоит в том, чтобы создать целостный и приятный опыт, который поможет ребенку с РАС развить конкретные навыки или поведение, одновременно задействуя его воображение и интерес через повествование.
 """)]
 
-def verify_text_is_training(text_to_check):
-  global llm
+def verify_text_is_training(text_to_check, llm):  
   verify_messages = [SystemMessage(content="Тебе нужно проверить яляется ли текст упражнением для ребёнка. Если текст является выведи в ответ 1, иначе выведи в ответ 0.")]
   verify_messages.append(HumanMessage(content=f"Текст для проверки: {text_to_check} Ответ:"))
   res = llm(verify_messages)
@@ -120,32 +119,39 @@ class AlignTrainingTool(BaseTool):
     Вызывается только после проверки качетсва истории.
     Примеры:
     Нужно подстороить упраженения под историю полсе её провери. (история проверена)"""
+    common = ""
+
+
+    def __init__(self, common):
+        super().__init__()
+        self.common = common
+
 
     def _run(
         self,
         run_manager=None,
     ) -> str:
-        global story_parts, align_request, align_messages, trainings
+        
 
-        strings_to_save = []
-        this_id, next_id = id_next()
-        parts_amount = len(story_parts) - 1
+        strings_to_save = []        
+        parts_amount = len(self.common["story_parts"]) - 1
         for idx in range(parts_amount):
           print(f"!!! готовлю упражнения: {idx}")
-          request_text = align_request.replace("[предыдущая часть]", story_parts[idx])
+          request_text = align_request.replace("[предыдущая часть]", self.common["story_parts"][idx])
           request_text = request_text.replace("[текст упражнения]", trainings[idx]["text"])
           request_text = request_text.replace("[что можно менять]", trainings[idx]["change"])
-          request_text = request_text.replace("[последующая часть]", story_parts[idx +1])
+          request_text = request_text.replace("[последующая часть]", self.common["story_parts"][idx +1])
           messages = align_messages
           messages.append(HumanMessage(content=request_text))
-          res = llm(messages)
+          res = self.common["llm"](messages)
           aligned_training = res.content
-          if not verify_text_is_training(aligned_training):
+          if not verify_text_is_training(aligned_training, self.common["llm"]):
             print(f"!!! упражнение НЕ прошло проверку {idx}: {aligned_training}")
             return "Упражнения отменены. Нужно создвать заново историю запустить функцию create_story"
           print(f"!!! упражнение {idx}: {aligned_training}")
-          strings_to_save.append(story_parts[idx])
+          strings_to_save.append(self.common["story_parts"][idx])
           strings_to_save += add_meta(split_string_by_numbered_dots(aligned_training),trainings[idx]["meta"])
-        strings_to_save.append(story_parts[-1])
-        save_list_to_files(strings_to_save)
+        strings_to_save.append(self.common["story_parts"][-1])
+        origin_id = save_list_to_files(strings_to_save)
+        self.common["file_id_to_start_chain"] = origin_id
         return "Упражнения подготовлены."

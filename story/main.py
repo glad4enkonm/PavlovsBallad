@@ -3,15 +3,9 @@ from langchain.agents import (
     create_gigachat_functions_agent,
 )
 
-from langchain.agents.gigachat_functions_agent.base import (
-    format_to_gigachat_function_messages,
-)
-from langchain.pydantic_v1 import BaseModel, Field
-from langchain.tools import BaseTool
 from langchain_community.chat_models import GigaChat
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import SystemMessage
 
-from typing import Optional, Type
 
 from align_training import AlignTrainingTool
 from story_critic import StoryCriticTool
@@ -33,13 +27,6 @@ system = """Ты агент по составлению истории. Ты с�
 Не придумывай данные сам.
 Создавать и оценивать историю, готовить упражнения можно только используя функции."""
 
-llm = GigaChat(
-    verify_ssl_certs=False,
-    timeout=300,
-    model=model,
-    credentials=credentials,
-    scope=scope
-)
 
 story = ""
 age = ""
@@ -48,12 +35,21 @@ story_parts = []
 
 
 def run():
-    chat_history = [SystemMessage(content=system)]
+    
+    llm = GigaChat(
+        verify_ssl_certs=False,
+        timeout=300,
+        model=model,
+        credentials=credentials,
+        scope=scope
+    )
 
     age = "14 лет"
     interest = "плавание и компьютерные игры"
-
-    tools = [StoryTellerTool(), StoryCriticTool(), AlignTrainingTool()]
+    
+    chat_history = [SystemMessage(content=system)]
+    common = {"age":age, "interest": interest, "llm": llm, "story_parts" : [], "file_id_to_start_chain": ''}
+    tools = [StoryTellerTool(common), StoryCriticTool(common), AlignTrainingTool(common)]
     agent = create_gigachat_functions_agent(llm, tools)
 
     # AgentExecutor создает среду, в которой будет работать агент
@@ -65,7 +61,7 @@ def run():
     result = agent_executor.invoke({"chat_history": chat_history,"input": user_input,})
     user_input = ""
     print( f"Bot: {result['output']}")
-
+    #'9fd5bfe1-0261-4900-a53c-80f73b5cf7e0'
 
 if __name__ == "__main__":
     run()

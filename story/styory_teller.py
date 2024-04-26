@@ -10,14 +10,19 @@ class StoryTellerTool(BaseTool):
 
     Примеры:
     Нужно создать историю"""
+    common = ""
+
+    def __init__(self, common):
+        super().__init__()
+        self.common = common        
+    
 
     def _run(
         self,
         run_manager=None,
     ) -> str:
-        global age
-        global interest
-        global llm
+        age = self.common["age"]
+        interest = self.common["interest"]
         print(f"!!! Создаю историю для возраста:{age} и интересов:{interest}")
         messages = [
           SystemMessage(
@@ -25,12 +30,10 @@ class StoryTellerTool(BaseTool):
           ),
           HumanMessage(content=f"Составь историю для ребёнка {age} лет, ребёнок увлекается {interest}.")
         ]
-        res = llm(messages)
-        global story
-        global story_parts
-        story = res.content
-        story_parts = split_text_by_block(story)
-        if len(story_parts) == 4:
+        res = self.common["llm"](messages)        
+        self.common["story"] = res.content
+        self.common["story_parts"] = split_text_by_block(self.common["story"])
+        if len(self.common["story_parts"]) == 4:
           print("История готова")
           result = "Запусти функцию проверки истории check_story"
         else:
